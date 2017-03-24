@@ -1,0 +1,119 @@
+server:
+    port: 9094
+    context-path: #/liuzh/
+
+logging:
+#    config:
+#      classpath: logback.xml
+#    path: /Users/fengxiaotx/logs
+    level: DEBUG
+    file: logs/log.log
+spring:
+    freemarker.prefer-file-system-access: false
+    datasource:
+#        url: jdbc:sqlserver://192.168.16.200:1433;DatabaseName=test
+#        username: sa
+#        password: 123456
+#        # 使用druid数据源
+#        type: com.alibaba.druid.pool.DruidDataSource
+#        driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#        name: test
+#        url: jdbc:mysql://103.237.6.59:3306/spider?useUnicode=true&characterEncoding=utf8
+#        username: liuxin
+#        password: liuxin
+        url: jdbc:mysql://127.0.0.1:3306/spider?useUnicode=true&characterEncoding=utf8
+        username: root
+        password: root
+        # 使用druid数据源
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        filters: stat
+        maxActive: 20
+        initialSize: 1
+        maxWait: 60000
+        minIdle: 1
+        timeBetweenEvictionRunsMillis: 60000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: select 'x'
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        poolPreparedStatements: true
+        maxOpenPreparedStatements: 20
+    mvc:
+        view:
+            prefix: /templates/
+            suffix: .ftl
+    freemarker:
+        cache: false
+        request-context-attribute: request
+        content-type: text/html
+    messages:
+        encoding: utf-8
+    http:
+        encoding:
+            charset: UTF-8
+            enabled: true
+    redis:
+          host: 103.237.6.59
+          password:
+          port: 6379
+          pool:
+            max-idle: 8
+            min-idle: 0
+            max-active: 300
+            max-wait: 10000
+          timeout: 100000
+    mail:
+        host: smtp.exmail.qq.com
+        username: caichengzhang@hbc315.com
+        password: 3qptN6ZiJySjSVGL
+        properties:
+          mail:
+            smtp:
+              auth: true
+              starttls:
+                enable: false
+                required: false
+
+#百度api
+baidu:
+    apikey: 5606bf20709221cc38fa38a8616b6986
+    apiurl: http://apis.baidu.com/apistore/mobilephoneservice/mobilephone
+
+#报告
+report:
+    url: http://172.16.7.30:10009/main?
+    #source: /home/hbc/appspider-report/source/report.js
+    #target: /home/hbc/appspider-report/target/
+    source: /Users/cheng/appspider-report/source/report.js
+    target: /Users/cheng/appspider-report/target/
+
+#geo平台
+geo:
+  url: http://114.113.66.37/xiaojinku/api/sendDataToKafka
+  pwd: reptile#!170213*$
+auth:
+  pwd: 123qweasdZXC
+
+
+
+#以下属性不可用
+#mybatis:
+#    pagehelper:
+#        dialect: mysql
+#        reasonable: true
+#        supportMethodsArguments: true
+#        returnPageInfo: check
+#        params: count=countSql
+#    mapper:
+#        mappers: MyMapper
+#        notEmpty: true
+#        style: camelhump
+#    sqlSessionFactoryBean:
+#        mapperLocations:
+#            - classpath:mapper/*.xml
+#            - classpath:mapper2/*.xml
+#        typeAliasesPackage: tk.mybatis.springboot.model
+#    mapperScanner:
+#        basePackage: tk.mybatis.springboot.mapper

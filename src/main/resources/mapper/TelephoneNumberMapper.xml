@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hbc.api.mapper.TelephoneNumberMapper">
+
+
+	<select id="getFyTelephoneNumbers" resultType="com.hbc.api.model.TelephoneNumber"
+		parameterType="java.util.List">
+		select id,telephone,name
+		from fy_information
+		where 1=1
+		<if test="list!=null and list.size()>0">
+			and telephone in
+			<foreach collection="list" item="item" index="index" open="("
+				separator="," close=")">#{item.phone}</foreach>
+		</if>
+	</select>
+
+	<select id="getCollectionTelephoneNumbers" resultType="com.hbc.api.model.TelephoneNumber"
+		parameterType="java.util.List">
+		select id,telephone
+		from collection_number
+		where 1=1
+		<if test="list!=null and list.size()>0">
+			and telephone in
+			<foreach collection="list" item="item" index="index" open="("
+				separator="," close=")">#{item.phone}</foreach>
+		</if>
+	</select>
+
+	<select id="getCreditTelephoneNumbers" resultType="com.hbc.api.model.TelephoneNumber"
+		parameterType="java.util.List">
+		select id,telephone,name
+		from credit_information
+		where 1=1
+		<if test="list!=null and list.size()>0">
+			and telephone in
+			<foreach collection="list" item="item" index="index" open="("
+				separator="," close=")">#{item.phone}</foreach>
+		</if>
+	</select>
+
+	<select id="getCreditMediumTelephoneNumbers" resultType="com.hbc.api.model.TelephoneNumber"
+		parameterType="java.util.List">
+		select id,telephone
+		from credit_medium
+		where 1=1
+		<if test="list!=null and list.size()>0">
+			and telephone in
+			<foreach collection="list" item="item" index="index" open="("
+				separator="," close=")">#{item.phone}</foreach>
+		</if>
+	</select>
+
+	<select id="getCreditCardTelephoneNumbers" resultType="com.hbc.api.model.TelephoneNumber"
+		parameterType="java.util.List">
+		select id,telephone,name
+		from credit_card
+		where 1=1
+		<if test="list!=null and list.size()>0">
+			and telephone in
+			<foreach collection="list" item="item" index="index" open="("
+				separator="," close=")">#{item.phone}</foreach>
+		</if>
+	</select>
+
+</mapper>

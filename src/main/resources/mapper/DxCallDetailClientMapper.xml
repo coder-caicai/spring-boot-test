@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hbc.api.mapper.DxCallDetailClientMapper">
+	<resultMap id="BaseResultMap" type="com.hbc.api.model.DxCallDetailClient">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="call_type" property="callType" jdbcType="VARCHAR" />
+		<result column="call_mobile" property="callMobile" jdbcType="VARCHAR" />
+		<result column="call_time" property="callTime" jdbcType="VARCHAR" />
+		<result column="call_time_cost" property="callTimeCost"
+			jdbcType="VARCHAR" />
+		<result column="call_style" property="callStyle" jdbcType="VARCHAR" />
+		<result column="call_area" property="callArea" jdbcType="VARCHAR" />
+		<result column="call_fee" property="callFee" jdbcType="DOUBLE" />
+		<result column="call_id" property="callId" jdbcType="INTEGER" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, call_type, call_mobile, call_time, call_time_cost,
+		call_style,call_area,call_fee,call_id
+	</sql>
+
+	<select id="getListByCallId" resultMap="BaseResultMap"
+		parameterType="java.util.List">
+		select
+		<include refid="Base_Column_List" />
+		from dx_call_detail_client
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		ORDER BY  call_time desc
+	</select>
+
+	<select id="getTop10ByCallId" resultMap="BaseResultMap"
+		parameterType="java.util.List">
+		select
+		call_mobile,count(id) as callTimes
+		from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		GROUP BY t.call_mobile
+		order by callTimes desc LIMIT 0,10
+	</select>
+	
+<!-- 	通话总次数top10、通话总时长top10 -->
+	<!-- 	通话次数TOP10 -->
+	<select id="getCallTimesTop10ByCallId"  resultType="com.hbc.api.dto.CallTimesDateDTO"
+		parameterType="java.util.List">
+		select
+		call_mobile as mobile,count(id) as callTimes
+		from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		GROUP BY t.call_mobile
+		order by callTimes desc LIMIT 0,10
+	</select>
+<!-- 	通话时长TOP10 -->
+	<select id="getCallDurationTop10ByCallId" resultType="com.hbc.api.dto.CallDurationDateDTO"
+		parameterType="java.util.List">
+		select
+		call_mobile as mobile,sum(SECOND(call_time_cost)+MINUTE(call_time_cost)*60+HOUR(call_time_cost)*3600) as callDuration
+		from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		GROUP BY t.call_mobile
+		order by callDuration desc LIMIT 0,10
+	</select>
+	<!-- 	夜间活动情况   晚12点以后的通话频次和时长 -->
+	<!-- 	夜间通话次数 -->
+	<select id="getNightCallTimesByCallId"  resultType="java.lang.Integer"
+		parameterType="java.util.List">
+		select
+		count(id)
+		from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		and HOUR(call_time)>=0
+		<![CDATA[ and HOUR(call_time) <6 ]]>
+	</select>
+		<!-- 	夜间通话时长-->
+	<select id="getNightCallDurationByCallId"  resultType="java.lang.Integer"
+		parameterType="java.util.List">
+		select
+		sum(SECOND(call_time_cost)+MINUTE(call_time_cost)*60+HOUR(call_time_cost)*3600)
+		from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		and HOUR(call_time)>=0
+		<![CDATA[ and HOUR(call_time) <6 ]]>
+	</select>
+	<!-- 	漫游天数，过去6个月存在漫游通话记录的天数 -->
+	<select id="getRoamingDaysByCallId" resultType="java.lang.Integer"
+		parameterType="java.util.List">
+		select count(dt) from
+		(select DATE(call_time)as dt
+		from dx_call_detail_client
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		and call_type =1
+		GROUP BY dt
+		) as tb
+	</select>
+	
+		<!-- 	手机静默情况   无通话记录的天数 -->
+	<select id="getSleepingDaysByCallId" resultType="java.lang.Integer"
+		parameterType="java.util.List">	
+        select sum(sd) from
+		(
+			select (if(mon=Month(createtime),DAY(createtime)-count(d),DAY(last_day(d))-count(d))) as sd,mon from
+			( select t1.create_time as createtime,DATE(t.call_time) as d, Month(str_to_date(t1.call_date,'%Y%m')) as mon
+	        from dx_call_client t1
+             left outer join 
+			dx_call_detail_client t
+            on
+            t1.id=t.call_id
+			where t.call_id IN 
+			<foreach collection="list" item="callIds" open="("  separator=","  close=")">
+					#{callIds}
+			</foreach>
+	        group by d ) as tb 
+            group by mon
+		)  as tb2
+	</select>
+	
+	<!-- 	报告——获取联系人信息(通话天数，通话时长，通话次数)  -->
+	<select id="getContactsInfoByCallIdAndPhone" resultType="com.hbc.api.dto.ContactsInfoDTO"
+		parameterType="java.util.Map">
+	select count(d) as talkDays,sum(dt) as talkDuration,sum(dc) as talkTimes
+	from (
+			select DATE(call_time) as d,
+				call_mobile as mdn,
+				sum(SECOND(call_time_cost)+MINUTE(call_time_cost)*60+HOUR(call_time_cost)*3600) as dt,
+				count(call_time) as dc
+			from dx_call_detail_client t
+			where call_id IN 
+			<foreach collection="list" item="callIds" open="("  separator=","  close=")">
+					#{callIds}
+			</foreach>
+			and call_mobile=#{phone}
+			group by d ,call_mobile
+		) as tab
+	</select>
+	
+	<!-- 	报告——夜间通话情况(通话时长，主叫通话次数，被叫通话次数)  -->
+	<select id="getNightInfoByCallId" resultType="com.hbc.api.dto.NightInfoDTO"
+		parameterType="java.util.List">
+		 select
+        (select count(call_time)
+        from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="("  separator=","  close=")">
+					#{callIds}
+		</foreach>
+        and call_type=0
+        and HOUR(call_time)>=0
+		<![CDATA[ and HOUR(call_time) <6 ]]>
+        )as callTimes,
+        (select count(call_time)
+        from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="("  separator=","  close=")">
+					#{callIds}
+		</foreach>
+        and call_type=1
+        and HOUR(call_time)>=0
+		<![CDATA[ and HOUR(call_time) <6 ]]>
+        )as calledTimes,
+		sum(SECOND(call_time_cost)+MINUTE(call_time_cost)*60+HOUR(call_time_cost)*3600) as talkDuration
+        from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="("  separator=","  close=")">
+					#{callIds}
+		</foreach>
+		and HOUR(call_time)>=0
+		<![CDATA[ and HOUR(call_time) <6 ]]>
+	</select>
+		<!-- 	报告——获取月度信息(通话时长，通话次数)  -->
+	<select id="getCallTimesAndDurationByCallIdAndType" resultType="com.hbc.api.dto.CallTimesAndDurationDTO"
+		parameterType="java.util.Map">
+        SELECT  count(call_time) as callTimes,
+        sum(SECOND(call_time_cost)+MINUTE(call_time_cost)*60+HOUR(call_time_cost)*3600) as callDuration
+		from dx_call_detail_client t
+		where call_id = #{callId}
+		and call_type=#{type}
+        group by call_id
+        order by call_id DESC
+	</select>
+	<!-- 报告——获取联系人信息(通话天数，通话时长，通话次数，主叫次数，被叫次数)  -->
+	<select id="getAllContactsInfoByCallId" resultType="com.hbc.api.dto.BestFriendDTO"
+		parameterType="java.util.List">
+		select count(d) as talkDays,mdn as phone,sum(dt) as talkDuration,sum(dc) as talkTimes,(select count(1)
+		from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		and call_type ='0'
+		and call_mobile=mdn
+		) as callTimes,
+		(select count(1) from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		and call_type ='1'
+		and call_mobile=mdn
+		) as calledTimes
+		from (
+		select DATE(call_time) as d,call_mobile as mdn
+		,sum(SECOND(call_time_cost)+MINUTE(call_time_cost)*60+HOUR(call_time_cost)*3600)
+		as dt,count(call_time) as dc from dx_call_detail_client t
+		where call_id IN
+		<foreach collection="list" item="callIds" open="(" separator=","
+			close=")">
+			#{callIds}
+		</foreach>
+		group by d ,call_mobile) t2
+		group by phone
+		order by talkDays desc
+	</select>
+	
+</mapper>
