@@ -1,5 +1,7 @@
 package com.hbc.api.util;
 
+import org.apache.commons.codec.binary.Base64;
+
 import java.security.Key;
 
 import javax.crypto.Cipher;
@@ -33,6 +35,7 @@ public class DESedeCoder {
         SecretKey secretKey = kg.generateKey();
 //        return secretKey.getEncoded(); 
 //        return "548e3b79fe75110271069efe".getBytes();
+//        String keys = "548e3b79fe75110271069efe";
         String keys = "1234567`90koiuyhgtfrdewsaqaqsqde";
         byte[] result = new byte[24];
         System.arraycopy(keys.getBytes(), 0, result, 0, result.length);
@@ -205,12 +208,36 @@ public class DESedeCoder {
         return HEX.encodeHexString(encryptData);
     }
 
+    public static String doEncryptDataBase64(String data) {
+        byte[] key = null;
+        byte[] encryptData = null;
+        try {
+            key = initSecretKey();
+            encryptData = encrypt(data.getBytes(), key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Base64.encodeBase64String(encryptData);
+    }
+
     public static String doDecryptData(String data) {
         byte[] key = new byte[0];
         byte[] decryptData = null;
         try {
             key = initSecretKey();
             decryptData = decrypt(HEX.decodeHexString(data), key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new String(decryptData);
+    }
+
+    public static String doDecryptDataBase64(String data) {
+        byte[] key = new byte[0];
+        byte[] decryptData = null;
+        try {
+            key = initSecretKey();
+            decryptData = decrypt(Base64.decodeBase64(data), key);
         } catch (Exception e) {
             e.printStackTrace();
         }

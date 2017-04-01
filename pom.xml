@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.hbc.api</groupId>
-    <artifactId>appspider</artifactId>
+    <artifactId>appspider-1-0</artifactId>
     <packaging>war</packaging>
     <version>1.0.0</version>
     <pluginRepositories>
@@ -55,6 +55,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
@@ -85,7 +86,12 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-parameter-names</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+            <version>1.1.2.RELEASE</version>
+        </dependency>
+
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
@@ -117,14 +123,14 @@
             <artifactId>pagehelper</artifactId>
             <version>${pagehelper.version}</version>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>1.2.5</version>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>org.springframework.boot</groupId>-->
-            <!--<artifactId>spring-boot-starter-log4j</artifactId>-->
+        <!--<groupId>org.springframework.boot</groupId>-->
+        <!--<artifactId>spring-boot-starter-log4j</artifactId>-->
         <!--</dependency>-->
 
         <!--通用Mapper-->
@@ -216,14 +222,14 @@
             <scope>provided</scope>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>org.springframework.data</groupId>-->
-            <!--<artifactId>spring-data-redis</artifactId>-->
-            <!--<version>1.4.1.RELEASE</version>-->
+        <!--<groupId>org.springframework.data</groupId>-->
+        <!--<artifactId>spring-data-redis</artifactId>-->
+        <!--<version>1.4.1.RELEASE</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-            <!--<groupId>redis.clients</groupId>-->
-            <!--<artifactId>jedis</artifactId>-->
-            <!--<version>2.6.3</version>-->
+        <!--<groupId>redis.clients</groupId>-->
+        <!--<artifactId>jedis</artifactId>-->
+        <!--<version>2.6.3</version>-->
         <!--</dependency>-->
         <dependency>
             <groupId>io.springfox</groupId>
@@ -240,17 +246,37 @@
             <artifactId>mail</artifactId>
             <version>1.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.geotmt</groupId>
+            <artifactId>geo-client-demo</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-eureka</artifactId>
+        </dependency>
     </dependencies>
-	
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Brixton.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <finalName>appspider</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>  
-                    <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>  
-                </configuration>  
+                <configuration>
+                    <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.springframework</groupId>

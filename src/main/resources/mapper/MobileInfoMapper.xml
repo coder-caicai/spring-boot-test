@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hbc.api.mapper.MobileInfoMapper" >
+    <resultMap id="BaseResultMap" type="com.hbc.api.model.MobileInfo">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="mobile" property="mobile" jdbcType="VARCHAR" />
+        <result column="time_length" property="time_length" jdbcType="VARCHAR" />
+        <result column="isp" property="isp" jdbcType="VARCHAR" />
+        <result column="created_time" property="created_time" jdbcType="VARCHAR" />
+    </resultMap>
+    <select id="getByMobile" resultMap="BaseResultMap"
+            parameterType="java.lang.String">
+        select
+          *
+        from mobile_info
+        where mobile = #{mobile,jdbcType=VARCHAR}
+    </select>
+</mapper>

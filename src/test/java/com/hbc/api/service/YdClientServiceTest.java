@@ -5,7 +5,10 @@ import com.hbc.api.Application;
 import com.hbc.api.common.EnumResultStatus;
 import com.hbc.api.dto.DataDto;
 import com.hbc.api.dto.ResultDto;
+import com.hbc.api.util.CommonHttpMethod;
 import com.hbc.api.util.MobilePlaceUtil;
+import com.hbc.api.util.ResponseValue;
+import org.apache.http.client.methods.HttpPost;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -47,13 +50,15 @@ public class YdClientServiceTest {
 
     @Test
     public void testSpider() throws Exception {
-       ResultDto result =  ydCallClientService.synchroData("18211155401","769766","030408",10000000);
+       ResultDto result =  ydCallClientService.synchroData("18211155401","437787","030408",10000000);
         logger.info(JSON.toJSONString(result));
     }
 
     @Test
     public void testList() throws Exception{
-//        List<DataDto> list = ydCallDetailClientService.getListByMobile("18211155401");
-//        logger.info(JSON.toJSONString(list));
+//         String url = "http://localhost:8080/aes";
+//        HttpPost httpPost = new HttpPost(url);
+//        ResponseValue res = ydCallClientService.doPostSSLUID(httpPost,"");
+//        logger.info(res.getResponse());
     }
 }

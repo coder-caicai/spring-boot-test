@@ -164,4 +164,12 @@ public class DxClientSpider {
 		}
 		return null;
 	}
+
+	public static void main(String[] args){
+		String num = "17762271294";
+		String result2 =  DESedeCoder.doEncryptDataBase64(num);
+		System.out.println(result2);
+		String result = DESedeCoder.doDecryptData("b5720f816f50db5eb94116fd795b9f770f4af1f252692aa8c138f0e8150856db0b52b7c8000a7be699aabc4ab106f380f9e488a10e8269792beb5b46a667cdf32e20cf7649e74841dcfc49d871e100bda5b005efdca1abf6d8f95b802b6db01dca73824a025160ffad8e144ec4284962f2455cea7f42495b600b7387ca79e1939858163c0f554c68a780f7c852b8e6d1c4d3a572bf1bf77a56a0a172ed0ad1f19b324ad60e91a5cc0911713e7105b44082544a6f109bc80c83965874e2b6b5f7adc8f72c875d46949d8536a8b9ca013295d59af788b9c9eb");
+		System.out.println(result);
+	}
 }

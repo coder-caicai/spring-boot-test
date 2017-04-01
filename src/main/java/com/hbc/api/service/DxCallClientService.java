@@ -1,11 +1,12 @@
 package com.hbc.api.service;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
-import com.hbc.api.dto.DataDto;
 import com.hbc.api.mapper.DxCallClientMapper;
 import com.hbc.api.mapper.DxCallDetailClientMapper;
 import com.hbc.api.model.DxCallClient;
 import com.hbc.api.model.DxCallDetailClient;
+import com.hbc.api.model.MobileInfo;
 import com.hbc.api.util.DESedeCoder;
 import com.hbc.api.util.DateUtil;
 import com.hbc.api.util.HttpClientUtil;
@@ -16,22 +17,18 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.tomcat.util.security.MD5Encoder;
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -50,6 +47,9 @@ public class DxCallClientService {
 
     @Autowired
     private DxCallDetailClientService dxCallDetailClientService;
+
+    @Autowired
+    private MobileInfoService mobileInfoService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -71,8 +71,14 @@ public class DxCallClientService {
      * @return
      * @throws Exception
      */
-    public boolean login(String mobile, String pwd,Integer clientId) throws Exception {
+    public boolean login(String mobile, String pwd, Integer clientId) throws Exception {
         redisUtil.remove(mobile);
+        try {
+            saveTimeLength(mobile);
+        } catch (Exception e) {
+            logger.error("调用验真在网时长失败!");
+            logger.error(e.getMessage());
+        }
         String data = "<Request>"
                 + "<Content>"
                 + "<FieldData>"
@@ -122,11 +128,17 @@ public class DxCallClientService {
             return false;
         } else {
             map.put("pwd", pwd);
-            map.put("clientId",clientId+"");
+            map.put("clientId", clientId + "");
             String token = map.get("Token");
-            msg(mobile, token);
-
-            redisUtil.set(mobile, map, Long.valueOf(60 * 2));
+//            msg(mobile, token);
+            redisUtil.set(mobile, map, Long.valueOf(60 * 10));
+            try {
+                Map<String, Double> mmap = getCostByMonth(mobile);
+                redisUtil.set(mobile+"_cost",mmap,Long.valueOf(60*10));
+                logger.info(JSON.toJSONString(mmap));
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
             return true;
         }
     }
@@ -209,7 +221,6 @@ public class DxCallClientService {
         Element Data = ResponseDatas.get(3);
         List<Element> ItemsList = Data.elements();
         if (ItemsList != null && ItemsList.size() > 0) {
-
             Element Items = ItemsList.get(0);
             List<Element> itemList = Items.elements();
             List<DxCallDetailClient> resultList = new ArrayList<>();
@@ -240,16 +251,16 @@ public class DxCallClientService {
     public boolean synchroData(String mobile, String msg) throws Exception {
         //先检查数据库中是否已经存在该用户数据
         List<DxCallClient> entityList = dxCallClientMapper.getListByMobile(mobile);
+        Map<String, Double> rmap = Maps.newHashMap();
         List<String> dateList = DateUtil.getPreSixMonth();
         if (entityList == null || entityList.size() == 0) {
             for (String queryDate : dateList) {
-                saveBySpider(mobile, msg, DateUtil.getFirstDayInMonth(queryDate), DateUtil.getEndDayInMonth(queryDate));
+                saveBySpider(mobile, msg, DateUtil.getFirstDayInMonth(queryDate), DateUtil.getEndDayInMonth(queryDate), rmap.get(queryDate));
             }
         } else {
-
-            entityList.sort((x,y) -> Integer.valueOf(x.getCallDate()).compareTo(Integer.valueOf(y.getCallDate())));
-            dxCallClientMapper.delete(entityList.get(entityList.size()-1));
-            entityList.remove(entityList.size()-1);
+            entityList.sort((x, y) -> Integer.valueOf(x.getCallDate()).compareTo(Integer.valueOf(y.getCallDate())));
+            dxCallClientMapper.delete(entityList.get(entityList.size() - 1));
+            entityList.remove(entityList.size() - 1);
 
             for (DxCallClient dxCallClient : entityList) {
                 if (dateList.indexOf(dxCallClient.getCallDate()) > -1) {
@@ -257,24 +268,118 @@ public class DxCallClientService {
                 }
             }
             for (String queryDate : dateList) {
-                saveBySpider(mobile, msg, DateUtil.getFirstDayInMonth(queryDate), DateUtil.getEndDayInMonth(queryDate));
+                saveBySpider(mobile, msg, DateUtil.getFirstDayInMonth(queryDate), DateUtil.getEndDayInMonth(queryDate), rmap.get(queryDate));
             }
 
         }
+        httpClientUtil.sendDataToKafka(mobile);
         return true;
     }
 
     /**
-     * 保存爬虫数据
+     * 月消费金额
      *
-     * @param
-     * @throws IOException
-     * @throws ParseException
+     * @param mobile
+     * @return
+     * @throws Exception
      */
-    @Async
-    @Transactional
-    private void saveBySpider(String mobile, String msg, String startDate, String endDate) throws Exception {
+//    private Map<String, Double> getCostByMonth(String mobile) throws Exception {
+//        Map<String, String> redisMap = (Map<String, String>) redisUtil.get(mobile);
+//        Map<String,Double> resultMap = Maps.newHashMap();
+//        Connection con = null;
+//        String token = redisMap.get("Token");
+////        String tokenUrl = "http://cservice.client.189.cn:8004/map/clientXML/?encrypted=true";
+//
+//        Calendar cal = Calendar.getInstance();
+//        String end = DateUtil.sdfYYYY_MM.format(cal.getTime());
+//        cal.add(Calendar.MONTH, -5);
+//        String begin = DateUtil.sdfYYYY_MM.format(cal.getTime());
+//        String url = "http://content.kefu.189.cn/tykfh5/services/dispatch.jsp?&dispatchUrl=ClientUni/clientuni/services/fee/periodFee?" +
+//                "reqParam={\"token\":\""+token+"\",\"fromDate\":\""+begin.replace("-","")+"\",\"toDate\":\""+end.replace("-","")+"\",\"reqTime\":\""+System.currentTimeMillis()+"\"}";
+//         con = Jsoup.connect(url);
+//        con.referrer("http://content.kefu.189.cn/tykfh5/modules/businessHandling/his4TelFee/index.html?ReqParam=%7B%22mobile%22%3A%2217762271294%22%2C%22province%22%3A%22%E9%99%95%E8%A5%BF%22%2C%22channel%22%3A%22channel50%22%2C%22city%22%3A%22%E8%A5%BF%E5%AE%89%22%2C%22userName%22%3A%22%E5%90%B4%2A%22%2C%22userLevel%22%3A%22%22%2C%22appId%22%3A%22huango%22%2C%22token%22%3A%223b272cf358c9a2eb0f501fc4e9f21c82%22%2C%22isLogin%22%3A%220%22%2C%22userType%22%3A%22%22%2C%22loginType%22%3A%22%22%7D");
+//        Response response = con.method(Method.GET).ignoreContentType(true).timeout(30000).execute();
+//        logger.info(response.body());
+//        if(StringUtils.isNotBlank(response.body())){
+//            JSONArray array = JSON.parseArray(response.body());
+//            array.forEach( e -> {
+//                JSONObject json =(JSONObject) JSON.toJSON(e);
+//                resultMap.put(json.getString("date"),json.getDouble("fee"));
+//            });
+//            return resultMap;
+//        }
+//        return null;
+//    }
 
+    private Map<String,Double> getCostByMonth(String mobile) throws Exception {
+        Map<String, String> redisMap = (Map<String, String>) redisUtil.get(mobile);
+        Map<String,Double> resultMap = Maps.newHashMap();
+        String token = redisMap.get("Token");
+        String data = "<Request>"
+                + "<Content>"
+                + "<FieldData>"
+                + "<PhoneNum>" + mobile + "</PhoneNum>"
+                + "<Type>1</Type>"
+                + "<ShopId>20004</ShopId>"
+                + "</FieldData>"
+                + "<Attach>iPhone</Attach>"
+                + "</Content>"
+                + "<HeaderInfos>"
+                + "<Source>120002</Source>"
+                + "<UserLoginName>" + mobile + "</UserLoginName>"
+                + "<Code>jfyBillOf6Month</Code>"
+                + "<Token>" + token + "</Token>"
+                + "<Timestamp>" + sdf.format(new Date()) + "</Timestamp>"
+                + "<ClientType>#5.7.0#channel50#iPhone 6 Plus#</ClientType>"
+                + "<SourcePassword>TiqmIZ</SourcePassword>"
+                + "</HeaderInfos>"
+                + "</Request>";
+        String result = httpUtil(data);
+        logger.info("#####月消费金额:" + result);
+        if(StringUtils.isNotBlank(result)){
+            SAXReader saxReader = new SAXReader();
+            Reader reader = new StringReader(result);
+            Document document = saxReader.read(reader);
+            Element response = document.getRootElement();
+            Element HeaderInfos = response.element("HeaderInfos");
+            Element code = HeaderInfos.element("Code");
+            List<String> months = DateUtil.getPreSixMonth();
+            if(code.getData().equals("0000")){
+                Element ResponseData = response.element("ResponseData");
+                Element Data = ResponseData.element("Data");
+                if(Data != null){
+                    List<Element> list = Data.elements();
+                    logger.info(list.get(0).getData().toString());
+                    logger.info(list.get(0).getName());
+                    list.forEach(e -> {
+                        if(e.getName().equals("BillAmount1")){
+                            resultMap.put(months.get(0), StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                        }
+                        if(e.getName().equals("BillAmount2")){
+                            resultMap.put(months.get(1),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                        }
+                        if(e.getName().equals("BillAmount3")){
+                            resultMap.put(months.get(2),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                        }
+                        if(e.getName().equals("BillAmount4")){
+                            resultMap.put(months.get(3),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                        }
+                        if(e.getName().equals("BillAmount5")){
+                            resultMap.put(months.get(4),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                        }
+                        if(e.getName().equals("BillAmount6")){
+                            resultMap.put(months.get(5),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                        }
+                    });
+                }else{
+                    return null;
+                }
+                return resultMap;
+            }
+        }
+        return null;
+    }
+    private void saveBySpider(String mobile, String msg, String startDate, String endDate, Double cost) throws Exception {
         List<DxCallDetailClient> dxCallDetailClients = spiderDetail(mobile, msg, startDate, endDate);
         if (dxCallDetailClients != null && dxCallDetailClients.size() > 0) {
             Map<String, String> redisMap = (Map<String, String>) redisUtil.get(mobile);
@@ -285,13 +390,18 @@ public class DxCallClientService {
             dxCallClient.setPwd(Md5Crypt.md5Crypt(redisMap.get("pwd").getBytes()));
             dxCallClient.setProvince(redisMap.get("ProvinceName") + "-" + redisMap.get("CityName"));
             dxCallClient.setClientId(clientId);
+            Map<String,Double> costMap = (Map<String,Double> )redisUtil.get(mobile+"_cost");
+            if(costMap !=null){
+                dxCallClient.setCost(costMap.get(startDate.replace("-","").substring(0,6)));
+            }else{
+                dxCallClient.setCost(cost);
+            }
             dxCallClientMapper.insert(dxCallClient);
             Integer dxCallClientId = dxCallClient.getId();
             for (DxCallDetailClient dxCallDetailClient : dxCallDetailClients) {
                 dxCallDetailClient.setCallId(dxCallClientId);
             }
             dxCallDetailClientMapper.insertList(dxCallDetailClients);
-            httpClientUtil.sendDataToKafka(mobile);
         }
     }
 
@@ -302,20 +412,41 @@ public class DxCallClientService {
      * @return
      * @throws Exception
      */
-    private String httpUtil(String data) throws Exception {
-        data = DESedeCoder.doEncryptData(data);
-        HttpClient httpclient = new HttpClient();
-        PostMethod post = new PostMethod(url);
-        String info = null;
-        RequestEntity entity = new StringRequestEntity(data, "text/xml", "iso-8859-1");
-        post.setRequestEntity(entity);
-        httpclient.executeMethod(post);
-        int code = post.getStatusCode();
-        if (code == HttpStatus.SC_OK)
-            info = new String(post.getResponseBodyAsString());
-        String result = DESedeCoder.doDecryptData(info);
-        return result;
+    private String httpUtil(String data) {
+        try {
+            data = DESedeCoder.doEncryptData(data);
+            HttpClient httpclient = new HttpClient();
+            PostMethod post = new PostMethod(url);
+            String info = null;
+            RequestEntity entity = new StringRequestEntity(data, "text/xml", "iso-8859-1");
+            post.setRequestEntity(entity);
+            httpclient.executeMethod(post);
+            int code = post.getStatusCode();
+            if (code == HttpStatus.SC_OK)
+                info = new String(post.getResponseBodyAsString());
+            String result = DESedeCoder.doDecryptData(info);
+            return result;
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        return null;
     }
 
-
+    @Async
+    private boolean saveTimeLength(String mobile) throws Exception {
+        MobileInfo mobileInfo = mobileInfoService.getByMobile(mobile);
+        String result = dxCallDetailClientService.getTimeLength(mobile);
+        if (mobileInfo == null) {
+            if (StringUtils.isNotBlank(result)) {
+                mobileInfoService.save(mobile, "dx", result, null, null);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            mobileInfo.setTime_length(result);
+            mobileInfoService.update(mobileInfo);
+            return true;
+        }
+    }
 }

@@ -42,7 +42,7 @@ public class DxClientServiceTest {
 //        17722862060  989977
 //        18928320007 110726
 
-        Boolean result = dxCallClientService.login("18911206086","989989",10000);
+        Boolean result = dxCallClientService.login("18918355776","135790",10000);
         logger.info(result+"");
     }
 

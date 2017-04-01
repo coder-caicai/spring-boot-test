@@ -1,6 +1,7 @@
 package com.hbc.api.controller;
 
 import com.hbc.api.util.EncryptUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Enumeration;
 
 /**
  * Created by cheng on 16/9/13.
@@ -23,6 +25,29 @@ public class AesController {
 
     @RequestMapping("")
     public String index(HttpServletRequest request){
+        return "aes";
+    }
+
+    @RequestMapping(value = "",method = RequestMethod.POST)
+    public String indexPost(HttpServletRequest request){
+        logger.info("remoteAddr:"+request.getRemoteAddr());
+        String ip = request.getHeader("x-forwarded-for");
+        if(StringUtils.isNotBlank(ip)){
+            logger.info("x-forwarded-for:"+ip);
+        }
+        if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)){
+            ip = request.getHeader("Proxy-Client-IP");
+            logger.info("Proxy-Client-IP:"+ip);
+        }
+        if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)){
+            ip = request.getHeader("WL-Proxy-Client-IP");
+            logger.info("WL-Proxy-Client-IP:"+ip);
+
+        }
+        if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)){
+            ip = request.getRemoteAddr();
+            logger.info("aa:"+ip);
+        }
         return "aes";
     }
 

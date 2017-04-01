@@ -9,6 +9,7 @@ import com.hbc.api.mapper.DxCallClientMapper;
 import com.hbc.api.mapper.DxCallDetailClientMapper;
 import com.hbc.api.model.DxCallClient;
 import com.hbc.api.model.DxCallDetailClient;
+import com.hbc.api.model.MobileInfo;
 import com.hbc.api.util.DateUtil;
 import com.hbc.api.util.FileUtils;
 import com.hbc.api.util.HttpClientUtil;
@@ -49,6 +50,9 @@ public class DxGdCallClientService {
     private DxCallDetailClientMapper dxCallDetailClientMapper;
 
     @Autowired
+    private MobileInfoService mobileInfoService;
+
+    @Autowired
     private DxCallDetailClientService dxCallDetailClientService;
 
     @Autowired
@@ -56,6 +60,8 @@ public class DxGdCallClientService {
 
     @Autowired
     private HttpClientUtil httpClientUtil;
+
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmss");
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -86,6 +92,9 @@ public class DxGdCallClientService {
      */
     public String login(String mobile, String pwd,String path,Integer clientId) {
         redisUtil.remove(mobile);
+
+        saveTimeLength(mobile);
+
         String domain = "http://61.140.99.28:8080/MOService/api?v=2.1&name=jbAClientSp&category=android&imsi=" + mobile + "&paramStr=";
         try{
             Map<String, String> cookieMap = new HashMap<>();
@@ -153,6 +162,8 @@ public class DxGdCallClientService {
     /**
      * 数据抓取
      *
+     * @param
+     * @return
      * @throws Exception
      */
     private String preSpiderDetail(String phoneNum, String img) {
@@ -281,6 +292,7 @@ public class DxGdCallClientService {
 
             }
         }
+        httpClientUtil.sendDataToKafka(mobile);
         return EnumResultStatus.SUCCESS;
     }
 
@@ -312,7 +324,7 @@ public class DxGdCallClientService {
                 dxCallDetailClient.setCallId(dxCallClientId);
             }
             dxCallDetailClientMapper.insertList(dxCallDetailClients);
-            httpClientUtil.sendDataToKafka(mobile);
+//            sendData(mobile,dxCallDetailClientService.detailListToDataDto(dxCallDetailClients));
         }
     }
 
@@ -374,6 +386,22 @@ public class DxGdCallClientService {
         } catch (Exception e) {
         }
         return "";
+    }
+
+    @Async
+    private boolean saveTimeLength(String mobile){
+        MobileInfo mobileInfo = mobileInfoService.getByMobile(mobile);
+        if(mobileInfo == null){
+            String result =  dxCallDetailClientService.getTimeLength(mobile);
+            if(StringUtils.isNotBlank(result)){
+                mobileInfoService.save(mobile,"dx",result,null,null);
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return true;
+        }
     }
 
 

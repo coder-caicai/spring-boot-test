@@ -5,7 +5,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
 import com.hbc.api.Application;
 import com.hbc.api.dto.MobilePlaceDto;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -45,21 +48,25 @@ public class HttpProxyTest {
 
     @Test
     public void test(){
-        String url = "http://xda.hbc315.com/aes";
+        String url = "http://www.baidu.com";
         HttpGet getMethod = new HttpGet(url);
         ResponseValue res = CommonHttpMethod.doGet(getMethod);
         logger.info(res.getResponse());
     }
 
+
+
     @Test
     public void testPost() throws IOException {
-//        HttpPost httpPost = new HttpPost();
+
+        String url = "https://www.baidu.com/";
+        HttpPost httpPost = new HttpPost(url);
 //        String data = "{\"mobile\":\"15618672909\",\"realName\":\"郭智超\",\"idCard\":\"222222222222222200\"}";
 //        StringEntity myEntity = new StringEntity(data, ContentType.APPLICATION_JSON);//
 //        httpPost.setEntity(myEntity);
-//        ResponseValue res = CommonHttpMethod.doPost(httpPost);
-//        logger.info(res.getResponse());
-//        Connection con = Jsoup.connect(url);
+        ResponseValue res = CommonHttpMethod.doPostSSL(httpPost);
+        logger.info(res.getResponse());
+//        Connection con = Jsoup.connect("http://www.baidu.com");
 //        con.header("Content-Type", "application/json;charset=UTF-8");
 //        con.header("APIAuthorize-Agent",
 //                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36");// 配置模拟浏览器
@@ -70,23 +77,22 @@ public class HttpProxyTest {
 //        map.put("idCard","222222222222222200");
 //        Connection.Response response = con.data(map).timeout(30000).ignoreContentType(true).method(Connection.Method.POST)
 //                .execute();
-//        logger.info(response.body());
-        ExecutorService executor = Executors.newCachedThreadPool();
-        for (int i = 0; i < 50; i++) {
-            executor.execute(()->{
-                try {
-                    test2();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
+//        ExecutorService executor = Executors.newCachedThreadPool();
+//        for (int i = 0; i < 50; i++) {
+//            executor.execute(()->{
+//                try {
+//                    test2();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//        }
+////        executor.shutdown(); // This will make the executor accept no new threads and finish all existing threads in the queue
+//
 //        executor.shutdown(); // This will make the executor accept no new threads and finish all existing threads in the queue
-
-        executor.shutdown(); // This will make the executor accept no new threads and finish all existing threads in the queue
-        while (!executor.isTerminated()) { // Wait until all threads are finish,and also you can use "executor.awaitTermination();" to wait
-        }
-        System.out.println("Finished all threads");
+//        while (!executor.isTerminated()) { // Wait until all threads are finish,and also you can use "executor.awaitTermination();" to wait
+//        }
+//        System.out.println("Finished all threads");
 
 
     }
@@ -112,5 +118,31 @@ public class HttpProxyTest {
         response.getEntity().getContent().close();
         method.releaseConnection();
         httpClient.close();
+    }
+
+
+    private  String getProxyIp(){
+        Connection con = null;
+        String httpProxyUrl = "http://dps.kuaidaili.com/api/getdps/?orderid=999033723725968&num=1&ut=1&sep=1";
+        con = Jsoup.connect(httpProxyUrl);
+        try {
+            Connection.Response response = con.timeout(30000).method(Connection.Method.GET)
+                    .ignoreContentType(true)
+                    .followRedirects(true)
+                    .execute();
+            logger.info("请求ip代理响应:"+response.body());
+            if(response.body().contains("ERROR")){
+                return  null;
+            }
+            if(response.statusCode() == 200){
+                return response.body();
+            }else{
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.error("获得代理ip出错!");
+        }
+        return null;
     }
 }

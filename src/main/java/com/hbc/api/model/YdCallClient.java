@@ -24,6 +24,8 @@ public class YdCallClient {
 
 	private Integer clientId;
 
+	private Double cost;
+
 
 	public Integer getId() {
 		return id;
@@ -79,5 +81,13 @@ public class YdCallClient {
 
 	public void setClientId(Integer clientId) {
 		this.clientId = clientId;
+	}
+
+	public Double getCost() {
+		return cost;
+	}
+
+	public void setCost(Double cost) {
+		this.cost = cost;
 	}
 }
