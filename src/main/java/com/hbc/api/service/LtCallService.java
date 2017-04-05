@@ -86,8 +86,6 @@ public class LtCallService {
                 }
             }
         } else {
-
-
             entityList.sort((x,y) -> Integer.valueOf(x.getCallDate()).compareTo(Integer.valueOf(y.getCallDate())));
             LtCall lastModel = entityList.get(entityList.size()-1);
             ltCallMapper.delete(lastModel);
@@ -114,13 +112,12 @@ public class LtCallService {
         return loginResult;
     }
 
-    @Async
     @Transactional
     private boolean saveBySpider(String mobile, String pwd, String startDate, String endDate, Integer clientId) {
 
         try {
             String result = spider(startDate, endDate);
-            logger.info(result);
+            logger.info("手机号:"+mobile+",详单:"+startDate+"-"+endDate+result.substring(0,500));
             if (result != null) {
                 List<LtCallDetail> list = jsonToEntity(result);
                 if (list != null && list.size() > 0) {
@@ -289,7 +286,7 @@ public class LtCallService {
         dataMap.put("endDate", endDate);
         Connection.Response detailResponse = con.timeout(30000).method(Connection.Method.POST).data(dataMap).cookies(cookieMap).ignoreContentType(true).followRedirects(true)
                 .execute();
-        logger.info(detailResponse.body());
+//        logger.info(detailResponse.body());
         return detailResponse.body();
     }
 

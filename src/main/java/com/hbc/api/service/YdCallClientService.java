@@ -345,7 +345,7 @@ public class YdCallClientService {
         String year = month.substring(0, 4);
         //totalCount 暂时不用
         String result = getDetailData(mobile, month, 1);
-        logger.info("爬虫明细:" + month + "月,第" + 1 + "页" + result);
+        logger.info("爬虫明细:" + month + "月,第" + 1 + "页" + result.substring(0,500));
         JSONArray array = new JSONArray();
         if (StringUtils.isNotBlank(result)) {
             JSONObject jsonObject = JSONObject.parseObject(result);
@@ -372,7 +372,7 @@ public class YdCallClientService {
                     for (int i = 2; i <= totalPage; i++) {
                         Thread.sleep(300);
                         result = getDetailData(mobile, month, i);
-                        logger.info("爬虫明细:" + month + "月,第" + i + "页" + result);
+                        logger.info("爬虫明细:" + month + "月,第" + i + "页" + result.substring(0,500));
                         jsonObject = JSONObject.parseObject(result);
                         if (jsonObject !=null &&jsonObject.getString("retCode").equals("000000")) {
                             rspBody = jsonObject.getJSONObject("rspBody");
@@ -539,17 +539,17 @@ public class YdCallClientService {
         postRequest.setHeader("xs", string2MD5(encrypt));
         CloseableHttpClient client = createSSLClientDefault();
         HttpClientContext context = HttpClientContext.create();
-        String iptxt= getProxyIp().split("\\r\\n")[0];
-        logger.info(iptxt);
-        if(StringUtils.isNotBlank(iptxt)){
-            // 依次是代理地址，代理端口号，协议类型
-            String[] ipp = iptxt.split(":");
-            String ip = ipp[0];
-            String prot = ipp[1];
-            HttpHost proxy = new HttpHost(ip,Integer.parseInt(prot),"http");
-            RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
-            postRequest.setConfig(config);
-        }
+//        String iptxt= getProxyIp().split("\\r\\n")[0];
+//        logger.info(iptxt);
+//        if(StringUtils.isNotBlank(iptxt)){
+//            // 依次是代理地址，代理端口号，协议类型
+//            String[] ipp = iptxt.split(":");
+//            String ip = ipp[0];
+//            String prot = ipp[1];
+//            HttpHost proxy = new HttpHost(ip,Integer.parseInt(prot),"http");
+//            RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
+//            postRequest.setConfig(config);
+//        }
         try {
             HttpResponse httpResponse = client.execute(postRequest, context);
             int code = httpResponse.getStatusLine().getStatusCode();
