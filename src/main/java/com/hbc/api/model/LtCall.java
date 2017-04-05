@@ -23,6 +23,8 @@ public class LtCall {
 
     private Date createTime;
 
+    private Double cost;
+
     public Integer getId() {
         return id;
     }
@@ -69,5 +71,13 @@ public class LtCall {
 
     public void setClientId(Integer clientId) {
         this.clientId = clientId;
+    }
+
+    public Double getCost() {
+        return cost;
+    }
+
+    public void setCost(Double cost) {
+        this.cost = cost;
     }
 }

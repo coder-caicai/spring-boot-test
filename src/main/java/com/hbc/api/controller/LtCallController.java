@@ -37,6 +37,7 @@ import com.hbc.api.model.LtCallDetail;
 import com.hbc.api.service.DxCallDetailClientService;
 import com.hbc.api.service.LtCallDetailService;
 import com.hbc.api.service.LtCallService;
+import com.hbc.api.util.RedisUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
@@ -68,25 +70,59 @@ public class LtCallController extends BaseContoller {
     @Autowired
     private LtCallDetailService ltCallDetailService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     @RequestMapping(value = "syncData")
     @ResponseBody
     public String synchroData(HttpServletRequest request) {
+        String path = request.getSession().getServletContext().getRealPath("/");
         String mobile = request.getAttribute("mobile")==null?null:request.getAttribute("mobile").toString();
         String pwd = request.getAttribute("pwd")==null?null:request.getAttribute("pwd").toString();
+        String validateCode = request.getAttribute("validateCode")==null?null:request.getAttribute("validateCode").toString();
         Integer clientId = Integer.parseInt(request.getAttribute("clientId").toString());
         ResultDto resultDto = new ResultDto();
         if(StringUtils.isNotBlank(mobile) && StringUtils.isNotBlank(pwd)){
             try {
-                resultDto = ltCallService.synchroData(mobile.trim(), pwd.trim(),clientId);
+                resultDto = ltCallService.login(mobile.trim(), pwd.trim(),clientId,path,validateCode);
             } catch (Exception e) {
                 logger.error(e.getMessage());
                 resultDto.setMsg("手机号,密码错误!");
                 resultDto.setStatus(EnumResultStatus.ERROR);
+                e.printStackTrace();
             }
         }else{
             resultDto.setMsg("手机号,密码错误!");
             resultDto.setStatus(EnumResultStatus.ERROR);
         }
+        redisUtil.set("time_"+mobile,pwd,Long.valueOf(60*2));
+        return responseStr(JSON.toJSONString(resultDto));
+    }
+
+    @RequestMapping(value = "msgConfirm",method = RequestMethod.POST)
+    @ResponseBody
+    public Object msgConfirm(HttpServletRequest request) throws IOException {
+        String mobile = request.getAttribute("mobile")==null?null:request.getAttribute("mobile").toString();
+        String validateCode = request.getAttribute("validateCode")==null?null:request.getAttribute("validateCode").toString();
+        Integer clientId = Integer.parseInt(request.getAttribute("clientId").toString());
+        String path = request.getSession().getServletContext().getRealPath("/");
+        String pwd = request.getAttribute("pwd")==null?null:request.getAttribute("pwd").toString();
+        ResultDto resultDto = new ResultDto();
+        if(redisUtil.exists(mobile+"_isLogin")){
+            resultDto = ltCallService.msgConfirm(mobile,validateCode);
+        }else{
+            try {
+                if(StringUtils.isBlank(pwd)){
+                    pwd = redisUtil.get("time_"+mobile).toString();
+                }
+                resultDto = ltCallService.login(mobile.trim(), redisUtil.get("time_"+mobile).toString(),clientId,path,validateCode);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+                resultDto.setMsg("验证码错误!");
+                resultDto.setStatus(EnumResultStatus.ERROR_IMG);
+            }
+        }
+
         return responseStr(JSON.toJSONString(resultDto));
     }
 
@@ -222,28 +258,28 @@ public class LtCallController extends BaseContoller {
         return responseStr(JSON.toJSONString(resultDto));
     }
 
-	@RequestMapping(value = "getPdfReportInfo")
-	@ResponseBody
-	public String getPdfReportInfo(HttpServletRequest request) {
-		ResultDto resultDto = new ResultDto();
-		String name = request.getAttribute("name").toString();
-		String phoneNum = request.getAttribute("phoneNum").toString();
-		String idCard = request.getAttribute("idCard").toString();
-		String contact1 = request.getAttribute("contact1").toString();
-		String contactNum1 = request.getAttribute("contactNum1").toString();
-		String contact2 = request.getAttribute("contact2").toString();
-		String contactNum2 = request.getAttribute("contactNum2").toString();
-		ReportDTO reportDto = ltCallDetailService.getReportInfo(name,phoneNum,idCard,contact1,contactNum1,contact2,contactNum2);
+    @RequestMapping(value = "getPdfReportInfo")
+    @ResponseBody
+    public String getPdfReportInfo(HttpServletRequest request) {
+        ResultDto resultDto = new ResultDto();
+        String name = request.getAttribute("name").toString();
+        String phoneNum = request.getAttribute("phoneNum").toString();
+        String idCard = request.getAttribute("idCard").toString();
+        String contact1 = request.getAttribute("contact1").toString();
+        String contactNum1 = request.getAttribute("contactNum1").toString();
+        String contact2 = request.getAttribute("contact2").toString();
+        String contactNum2 = request.getAttribute("contactNum2").toString();
+        ReportDTO reportDto = ltCallDetailService.getReportInfo(name,phoneNum,idCard,contact1,contactNum1,contact2,contactNum2);
         resultDto.setStatus(EnumResultStatus.SUCCESS);
         if (reportDto!=null) {
-        	resultDto.setMsg(EnumResultStatus.SUCCESS.getName());
-		}else {
-			resultDto.setMsg("无数据信息！");
-		}
+            resultDto.setMsg(EnumResultStatus.SUCCESS.getName());
+        }else {
+            resultDto.setMsg("无数据信息！");
+        }
         resultDto.setData(reportDto);
-		return  responseStr(JSON.toJSONString(resultDto));
-	}
-	
+        return  responseStr(JSON.toJSONString(resultDto));
+    }
+
     @RequestMapping("/index")
     public String index(HttpServletResponse response) {
 //        response.setContentType("text/html");
