@@ -117,7 +117,7 @@ public class LtCallService {
 
         try {
             String result = spider(startDate, endDate);
-            logger.info("手机号:"+mobile+",详单:"+startDate+"-"+endDate+result.substring(0,500));
+            logger.info("手机号:"+mobile+",详单:"+startDate+"-"+endDate+":"+result);
             if (result != null) {
                 List<LtCallDetail> list = jsonToEntity(result);
                 if (list != null && list.size() > 0) {

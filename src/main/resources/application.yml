@@ -18,7 +18,7 @@ spring:
 #        type: com.alibaba.druid.pool.DruidDataSource
 #        driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 #        name: test
-#        url: jdbc:mysql://103.237.6.59:3306/spider?useUnicode=true&characterEncoding=utf8
+#        url: jdbc:mysql://testmysql:3306/spider?useUnicode=true&characterEncoding=utf8
 #        username: liuxin
 #        password: liuxin
         url: jdbc:mysql://127.0.0.1:3306/spider?useUnicode=true&characterEncoding=utf8
@@ -88,6 +88,11 @@ report:
     #target: /home/hbc/appspider-report/target/
     source: /Users/cheng/appspider-report/source/report.js
     target: /Users/cheng/appspider-report/target/
+#ip报警
+ip:
+  address: /home/hbc/appspider
+  toMail: caichengzhang@hbc315.com
+
 
 #geo平台
 geo:

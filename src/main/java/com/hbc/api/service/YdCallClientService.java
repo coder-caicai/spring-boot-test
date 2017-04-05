@@ -79,6 +79,9 @@ public class YdCallClientService {
     @Autowired
     private YdCallDetailClientMapper ydCallDetailClientMapper;
 
+    @Autowired
+    private MailUtil mailUtil;
+
 //    private String httpProxyUrl = "http://tvp.daxiangdaili.com/ip/?tid=558054280595921&num=1&protocol=https&filter=on&category=2&delay=5&sortby=time";
 //    private String httpProxyUrl = "http://dev.kuaidaili.com/api/getproxy/?orderid=938964833156023&num=1&b_pcchrome=1&b_pcie=1&b_pcff=1&b_android=1&b_iphone=1&protocol=2&method=2&an_an=1&an_ha=1&sp2=1&dedup=1&sep=1";
     private String httpProxyUrl = "http://www.xdaili.cn/ipagent/privateProxy/applyStaticProxy?count=1&spiderId=fdc2dbbfce564c03aa87e687318070eb&returnType=1";
@@ -135,6 +138,13 @@ public class YdCallClientService {
         }
     }
 
+    /**
+     * 月消费金额
+     * @param mobile
+     * @param startMonth
+     * @param endMonth
+     * @return
+     */
     private boolean getAllCost(String mobile, String startMonth, String endMonth) {
         try {
             String url = "https://clientaccess.10086.cn/biz-orange/BN/historyBillsService/getHistoryBills";
@@ -147,10 +157,10 @@ public class YdCallClientService {
             String UID = (String) redisUtil.get(mobile + "_UID");
             String cookie = "JSESSIONID=" + JSESSIONID + "; UID=" + UID + "; Comment=SessionServer-unity; Path=/; Secure";
             postMethod.setHeader("Cookie", cookie);
-
             StringEntity myEntity = new StringEntity(cdata, ContentType.APPLICATION_JSON);
             postMethod.setEntity(myEntity);
             ResponseValue res = doPostSSLUID(postMethod, cdata, mobile);
+            Thread.sleep(1000);
             logger.info(res.getResponse());
             JSONObject result = JSONObject.parseObject(res.getResponse().trim());
             if (result.getString("retCode").equals("000000")) {
@@ -245,7 +255,6 @@ public class YdCallClientService {
         String begin = DateUtil.sdfYYYY_MM.format(cal.getTime());
         getAllCost(mobile, begin, end);
 
-
         try {
             saveTimeLength(mobile);
         } catch (Exception e) {
@@ -258,23 +267,10 @@ public class YdCallClientService {
         List<EnumResultStatus> rlist = Lists.newArrayList();
         if (entityList == null || entityList.size() == 0) {
             for (String queryDate : dateList) {
-//                cachedThreadPool.execute(() -> {
-//                    saveBySpider(mobile, pwd, queryDate.substring(0, 4).concat("-").concat(queryDate.substring(4, 6)), clientId);
-//                });
-//                try {
-//                    Thread.sleep(800);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
                 dto = saveBySpider(mobile, pwd, queryDate.substring(0, 4).concat("-").concat(queryDate.substring(4, 6)), clientId);
                 Thread.sleep(400);
                 rlist.add(dto.getStatus());
             }
-//            rlist.forEach(status -> {
-//                if(status.equals(EnumResultStatus.SUCCESS)){
-//
-//                }
-//            });
         } else {
             entityList.sort((x, y) -> Integer.valueOf(x.getCallDate()).compareTo(Integer.valueOf(y.getCallDate())));
             YdCallClient lastModel = entityList.get(entityList.size() - 1);
@@ -335,6 +331,8 @@ public class YdCallClientService {
             }
         } else {
             logger.error("获取明细失败!请检查验证码是否过期");
+            dto.setStatus(EnumResultStatus.ERROR);
+            dto.setMsg("获取明细失败!");
             return dto;
         }
     }
@@ -345,7 +343,7 @@ public class YdCallClientService {
         String year = month.substring(0, 4);
         //totalCount 暂时不用
         String result = getDetailData(mobile, month, 1);
-        logger.info("爬虫明细:" + month + "月,第" + 1 + "页" + result.substring(0,500));
+        logger.info("爬虫明细:" + month + "月,第" + 1 + "页" + result);
         JSONArray array = new JSONArray();
         if (StringUtils.isNotBlank(result)) {
             JSONObject jsonObject = JSONObject.parseObject(result);
@@ -372,7 +370,7 @@ public class YdCallClientService {
                     for (int i = 2; i <= totalPage; i++) {
                         Thread.sleep(300);
                         result = getDetailData(mobile, month, i);
-                        logger.info("爬虫明细:" + month + "月,第" + i + "页" + result.substring(0,500));
+                        logger.info("爬虫明细:" + month + "月,第" + i + "页" + result);
                         jsonObject = JSONObject.parseObject(result);
                         if (jsonObject !=null &&jsonObject.getString("retCode").equals("000000")) {
                             rspBody = jsonObject.getJSONObject("rspBody");
@@ -486,9 +484,25 @@ public class YdCallClientService {
             ResponseValue res = doPostSSLUID(postMethod, data, mobile);
             logger.info("请求参数:mobile:" + mobile + ",pwd:" + pwd + ",smsCode:" + smsCode);
             String body = res.getResponse();
+
+            if(StringUtils.isBlank(body)){
+                if(redisUtil.exists(mobile+"_count")){
+                    int count = (int) redisUtil.get(mobile+"_count");
+                    count +=1;
+                    if(count == 10){
+                        mailUtil.sendIpEmail();
+                    }else{
+                        redisUtil.set(mobile+"_count",count,Long.valueOf(60*10));
+                    }
+                }else{
+                    redisUtil.set(mobile+"_count",1,Long.valueOf(60*10));
+                }
+            }else{
+                redisUtil.remove(mobile+"_count");
+            }
+
             logger.info("移动身份验证返回:" + body);
             if(StringUtils.isNotBlank(body)){
-
                 JSONObject object = JSON.parseObject(body);
                 if (!object.getString("retCode").equals("000000")) {
                     dto.setStatus(EnumResultStatus.ERROR);

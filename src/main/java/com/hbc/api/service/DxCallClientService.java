@@ -207,7 +207,7 @@ public class DxCallClientService {
                 + "</HeaderInfos>"
                 + "</Request>";
         String result = httpUtil(data);
-        logger.info(mobile+":详单:"+startDate+"-"+endDate + result.substring(0,500));
+        logger.info(mobile+":详单:"+startDate+"-"+endDate+":" + result);
         SAXReader saxReader = new SAXReader();
         Reader reader = new StringReader(result);
         Document document = saxReader.read(reader);

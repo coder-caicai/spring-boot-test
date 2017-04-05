@@ -63,6 +63,7 @@ public class AuthController extends BaseContoller {
 	 * 取得token
 	 */
 	@RequestMapping(value = "")
+	@ResponseBody
 	public String getToken(HttpServletRequest request,String  clientId,String clientSecret) {
 		if(StringUtils.isBlank(clientId)){
 			clientId = request.getAttribute("clientId").toString();

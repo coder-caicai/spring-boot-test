@@ -50,7 +50,7 @@ public class YdClientServiceTest {
 
     @Test
     public void testSpider() throws Exception {
-       ResultDto result =  ydCallClientService.synchroData("18211155401","437787","030408",10000000);
+       ResultDto result =  ydCallClientService.synchroData("18211155401","071948","030408",10000000);
         logger.info(JSON.toJSONString(result));
     }
 
