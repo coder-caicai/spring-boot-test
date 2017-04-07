@@ -81,12 +81,12 @@ public class AuthService {
         }
 
         //验证密码BCrypt
-        if (!BCrypt.checkpw(clientId, clientSecret)) {
-            logger.error("user 传入的clientSecret: " + clientSecret);
-            logger.error("authorize 数据库中传入的clientSecret: " + auth.getSecret());
-            logger.error("密码验证密码失败!");
-            return dataMap;
-        }
+//        if (!BCrypt.checkpw(clientId, clientSecret)) {
+//            logger.error("user 传入的clientSecret: " + clientSecret);
+//            logger.error("authorize 数据库中传入的clientSecret: " + auth.getSecret());
+//            logger.error("密码验证密码失败!");
+//            return dataMap;
+//        }
 
         //验证账号是否停用
         if(auth.getStatus().equals(1)){
@@ -121,7 +121,12 @@ public class AuthService {
     public Map<String, Object> verifyUser(String token) {
         return AuthUtil.verifyTokenUser(token);
     }
-
-
+//
+//    public static void main(String[] args){
+//        Md5Util md5Util = new Md5Util();
+//        String md5 = md5Util.string2MD5("$2a$11$15fkacD6UhJnQJxB2bma.OxJp1WyG7U4T42TW6PWKz1WC5d0aq7mW");
+//        String mm = "b2128900d5f4750ff66810e293aca647";
+//        System.out.println(md5);
+//    }
 
 }

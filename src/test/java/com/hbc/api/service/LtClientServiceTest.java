@@ -36,14 +36,14 @@ public class LtClientServiceTest {
 
     @Test
     public void test() throws Exception {
-        ResultDto result = ltCallService.synchroData("18513068661","090801",10000);
+        ResultDto result = ltCallService.login("13161014656","265974",10000,null,null);
         logger.info(JSON.toJSONString(result));
     }
 
     @Test
     public void testSpider() throws Exception {
-//       EnumResultStatus result =  ydCallClientService.synchroData("","790364");
-//        logger.info(result.getName());
+        ResultDto dto = ltCallService.msgConfirm("13161014656","048351");
+        logger.info(JSON.toJSONString(dto));
     }
 
     @Test

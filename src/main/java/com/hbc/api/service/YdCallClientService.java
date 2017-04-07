@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -102,8 +103,6 @@ public class YdCallClientService {
     private String UID = "";
 
     private Map<String, Double> costMap = Maps.newHashMap();
-
-    private ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     /**
      * 入网时间
@@ -247,6 +246,12 @@ public class YdCallClientService {
         if (!dto.getStatus().equals(EnumResultStatus.SUCCESS)) {
             return dto;
         }
+        try {
+            saveTimeLength(mobile);
+        } catch (Exception e) {
+            logger.error("获取在网时长失败!");
+            logger.error(e.getMessage());
+        }
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.MONTH, -1);
@@ -255,21 +260,11 @@ public class YdCallClientService {
         String begin = DateUtil.sdfYYYY_MM.format(cal.getTime());
         getAllCost(mobile, begin, end);
 
-        try {
-            saveTimeLength(mobile);
-        } catch (Exception e) {
-            logger.error("获取在网时长失败!");
-            logger.error(e.getMessage());
-        }
-
         List<YdCallClient> entityList = ydCallClientMapper.getListByMobile(mobile);
         List<String> dateList = DateUtil.getPreSixMonth();
-        List<EnumResultStatus> rlist = Lists.newArrayList();
         if (entityList == null || entityList.size() == 0) {
             for (String queryDate : dateList) {
                 dto = saveBySpider(mobile, pwd, queryDate.substring(0, 4).concat("-").concat(queryDate.substring(4, 6)), clientId);
-                Thread.sleep(400);
-                rlist.add(dto.getStatus());
             }
         } else {
             entityList.sort((x, y) -> Integer.valueOf(x.getCallDate()).compareTo(Integer.valueOf(y.getCallDate())));
@@ -291,7 +286,7 @@ public class YdCallClientService {
         return dto;
     }
 
-
+    @Transactional
     private ResultDto saveBySpider(String mobile, String pwd, String month, Integer clientId) throws InterruptedException {
         ResultDto dto = new ResultDto();
         dto = jsonToList(mobile, month);
@@ -304,7 +299,7 @@ public class YdCallClientService {
                     ydCallClient.setMobile(mobile);
                     ydCallClient.setPwd(Md5Crypt.md5Crypt(pwd.getBytes()));
                     ydCallClient.setClientId(clientId);
-                     ydCallClient.setCost(costMap.get(month.replace("-", "")));
+                    ydCallClient.setCost(costMap.get(month.replace("-", "")));
                     logger.info("主表数据开始插入");
                     ydCallClientMapper.insert(ydCallClient);
                     logger.info("主表数结束插入");
@@ -341,7 +336,6 @@ public class YdCallClientService {
         ResultDto dto = new ResultDto();
         List<YdCallDetailClient> resList = new ArrayList<>();
         String year = month.substring(0, 4);
-        //totalCount 暂时不用
         String result = getDetailData(mobile, month, 1);
         logger.info("爬虫明细:" + month + "月,第" + 1 + "页" + result);
         JSONArray array = new JSONArray();
@@ -365,10 +359,8 @@ public class YdCallClientService {
                         totalPage = totalPage + 1;
                     }
                 }
-                Thread.sleep(300);
                 if (totalPage >= 2) {
                     for (int i = 2; i <= totalPage; i++) {
-                        Thread.sleep(300);
                         result = getDetailData(mobile, month, i);
                         logger.info("爬虫明细:" + month + "月,第" + i + "页" + result);
                         jsonObject = JSONObject.parseObject(result);
