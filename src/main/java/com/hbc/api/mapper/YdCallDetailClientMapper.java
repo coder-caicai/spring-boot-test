@@ -22,22 +22,39 @@ public interface YdCallDetailClientMapper extends MyMapper<YdCallDetailClient> {
     public List<YdCallDetailClient> getListByCallId(List<Integer> callIds);
 
     public List<YdCallDetailClient> getTop10ByCallId(List<Integer> callIds);
-    
+
     public List<CallTimesDateDTO> getCallTimesTop10ByCallId(List<Integer> callIds);
-    
+
     public List<CallDurationDateDTO> getCallDurationTop10ByCallId(List<Integer> callIds);
-    
+
     public Integer getNightCallTimesByCallId(List<Integer> callIds);
-    
+
     public Integer getNightCallDurationByCallId(List<Integer> callIds);
-    
+
     public Integer getRoamingDaysByCallId(List<Integer> callIds);
-    
+
     public Integer getSleepingDaysByCallId(List<Integer> callIds);
-    
+
     public NightInfoDTO getNightInfoByCallId(List<Integer> callIds);
-    
+
     public CallTimesAndDurationDTO getCallTimesAndDurationByCallIdAndType(Map<String,Object> map);
-    
+
     public List<BestFriendDTO> getAllContactsInfoByCallId(List<Integer> callIds);
+
+    int deleteByPrimaryKey(Integer id);
+
+    int insert(YdCallDetailClient record);
+
+    int insertSelective(YdCallDetailClient record);
+
+    int updateByPrimaryKeySelective(YdCallDetailClient record);
+
+    int updateByPrimaryKey(YdCallDetailClient record);
+
+    /**
+     * 取新增数据
+     * @param id
+     * @return
+     */
+    List<YdCallDetailClient> findNewData(Integer id);
 }

@@ -130,7 +130,7 @@ public class DxCallClientService {
             map.put("pwd", pwd);
             map.put("clientId", clientId + "");
             String token = map.get("Token");
-//            msg(mobile, token);
+            msg(mobile, token);
             redisUtil.set(mobile, map, Long.valueOf(60 * 10));
             try {
                 Map<String, Double> mmap = getCostByMonth(mobile);
@@ -150,6 +150,7 @@ public class DxCallClientService {
      * @param token
      * @throws Exception
      */
+    @Async
     private void msg(String mobile, String token) throws Exception {
         String data = "<Request>"
                 + "<Content>"
@@ -349,25 +350,21 @@ public class DxCallClientService {
                 Element Data = ResponseData.element("Data");
                 if(Data != null){
                     List<Element> list = Data.elements();
-                    logger.info(list.get(0).getData().toString());
-                    logger.info(list.get(0).getName());
+                    resultMap.put(months.get(0),null);
                     list.forEach(e -> {
                         if(e.getName().equals("BillAmount1")){
-                            resultMap.put(months.get(0), StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
+                            resultMap.put(months.get(1), StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
                         }
                         if(e.getName().equals("BillAmount2")){
-                            resultMap.put(months.get(1),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
-                        }
-                        if(e.getName().equals("BillAmount3")){
                             resultMap.put(months.get(2),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
                         }
-                        if(e.getName().equals("BillAmount4")){
+                        if(e.getName().equals("BillAmount3")){
                             resultMap.put(months.get(3),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
                         }
-                        if(e.getName().equals("BillAmount5")){
+                        if(e.getName().equals("BillAmount4")){
                             resultMap.put(months.get(4),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
                         }
-                        if(e.getName().equals("BillAmount6")){
+                        if(e.getName().equals("BillAmount5")){
                             resultMap.put(months.get(5),StringUtils.isBlank(e.getData().toString())?0:Double.valueOf(e.getData().toString()));
                         }
                     });
@@ -379,6 +376,7 @@ public class DxCallClientService {
         }
         return null;
     }
+    @Async
     private void saveBySpider(String mobile, String msg, String startDate, String endDate, Double cost) throws Exception {
         List<DxCallDetailClient> dxCallDetailClients = spiderDetail(mobile, msg, startDate, endDate);
         if (dxCallDetailClients != null && dxCallDetailClients.size() > 0) {

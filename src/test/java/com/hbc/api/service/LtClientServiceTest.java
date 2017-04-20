@@ -42,7 +42,7 @@ public class LtClientServiceTest {
 
     @Test
     public void testSpider() throws Exception {
-        ResultDto dto = ltCallService.msgConfirm("13161014656","048351");
+        ResultDto dto = ltCallService.msgConfirm("13161014656","829577");
         logger.info(JSON.toJSONString(dto));
     }
 

@@ -84,8 +84,7 @@ public class YdCallClientService {
     private MailUtil mailUtil;
 
 //    private String httpProxyUrl = "http://tvp.daxiangdaili.com/ip/?tid=558054280595921&num=1&protocol=https&filter=on&category=2&delay=5&sortby=time";
-//    private String httpProxyUrl = "http://dev.kuaidaili.com/api/getproxy/?orderid=938964833156023&num=1&b_pcchrome=1&b_pcie=1&b_pcff=1&b_android=1&b_iphone=1&protocol=2&method=2&an_an=1&an_ha=1&sp2=1&dedup=1&sep=1";
-    private String httpProxyUrl = "http://www.xdaili.cn/ipagent/privateProxy/applyStaticProxy?count=1&spiderId=fdc2dbbfce564c03aa87e687318070eb&returnType=1";
+    private String httpProxyUrl = "http://dev.kuaidaili.com/api/getproxy/?orderid=938964833156023&num=1&b_pcchrome=1&b_pcie=1&b_pcff=1&b_android=1&b_iphone=1&protocol=2&method=2&an_an=1&an_ha=1&sp2=1&dedup=1&sep=1";
     private static String cid = "M/xTDFNIp5LYrmsByvpx8kLnL85EZ4TBsurrbeao+m5bTacj2bfMrsApQlMklevyDtqf7KMqsQSDAS+Ah3Xs2sCDkuVhr90hPWvpPk19dDI=";
     private static String ctid = "M/xTDFNIp5LYrmsByvpx8kLnL85EZ4TBsurrbeao+m5bTacj2bfMrsApQlMklevyDtqf7KMqsQSDAS+Ah3Xs2sCDkuVhr90hPWvpPk19dDI=";
     private static String cv = "3.6.0";
@@ -213,6 +212,7 @@ public class YdCallClientService {
      * @param mobile
      * @return
      */
+    @Async
     public ResultDto sendMsg(String mobile) {
         ResultDto dto = new ResultDto();
         try {
@@ -285,8 +285,7 @@ public class YdCallClientService {
         httpClientUtil.sendDataToKafka(mobile);
         return dto;
     }
-
-    @Transactional
+    @Async
     private ResultDto saveBySpider(String mobile, String pwd, String month, Integer clientId) throws InterruptedException {
         ResultDto dto = new ResultDto();
         dto = jsonToList(mobile, month);

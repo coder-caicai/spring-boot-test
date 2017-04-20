@@ -42,4 +42,7 @@ public interface DxCallDetailClientMapper extends MyMapper<DxCallDetailClient> {
     public CallTimesAndDurationDTO getCallTimesAndDurationByCallIdAndType(Map<String,Object> map);
     
     public List<BestFriendDTO> getAllContactsInfoByCallId(List<Integer> callIds);
+
+    List<DxCallDetailClient> findNewData(Integer id);
+
 }

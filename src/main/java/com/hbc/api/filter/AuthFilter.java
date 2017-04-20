@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.hbc.api.common.EnumResultStatus;
 import com.hbc.api.dto.ResultDto;
 import com.hbc.api.service.AuthService;
-import com.hbc.api.util.AesUtil;
 import com.hbc.api.util.AuthUtil;
 import com.hbc.api.util.EncryptUtils;
 import org.apache.commons.lang.StringUtils;
@@ -15,13 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -38,10 +31,7 @@ import java.util.Map;
 @Component("authFilter")
 public class AuthFilter implements Filter {
 
-
     private Logger logger = LoggerFactory.getLogger(getClass());
-
-    private String key = "e28a4f2d9eb6aa3a2f3484cb368a73e9";
 
     @Autowired
     private AuthService authService;
@@ -59,7 +49,10 @@ public class AuthFilter implements Filter {
         if (httpRequest.getRequestURI().startsWith("/auth")) {
             doParameter(request);
             chain.doFilter(request, response);
-        }else if(httpRequest.getRequestURI().endsWith(".js") ||httpRequest.getRequestURI().endsWith(".png") ){
+        }else if(httpRequest.getRequestURI().endsWith(".js") ||
+                httpRequest.getRequestURI().endsWith(".png") ){
+            chain.doFilter(request, response);
+        }else if(httpRequest.getRequestURI().startsWith("/imagecodedir")){
             chain.doFilter(request, response);
         }else if(httpRequest.getRequestURI().startsWith("/aes")){
             chain.doFilter(request, response);
@@ -127,8 +120,6 @@ public class AuthFilter implements Filter {
 //            logger.error("传参有误!");
         }
     }
-
-
 }
 
 

@@ -239,30 +239,4 @@ public class YdCallController extends BaseContoller {
         resultDto.setData(result);
         return responseStr(JSON.toJSONString(resultDto));
     }
-
-    /* @function 获取pdf数据报告
-     *
-     * @author  zhuwh
-     */
-    @RequestMapping(value = "getPdfReportInfo")
-    @ResponseBody
-    public String getPdfReportInfo(HttpServletRequest request) {
-        ResultDto resultDto = new ResultDto();
-        String name = request.getAttribute("name") == null ? null : request.getAttribute("name").toString();
-        String phoneNum = request.getAttribute("phoneNum") == null ? null : request.getAttribute("phoneNum").toString();
-        String idCard = request.getAttribute("idCard") == null ? null : request.getAttribute("idCard").toString();
-        String contact1 = request.getAttribute("contact1") == null ? null : request.getAttribute("contact1").toString();
-        String contactNum1 = request.getAttribute("contactNum1") == null ? null : request.getAttribute("contactNum1").toString();
-        String contact2 = request.getAttribute("contact2") == null ? null : request.getAttribute("contact2").toString();
-        String contactNum2 = request.getAttribute("contactNum2") == null ? null : request.getAttribute("contactNum2").toString();
-        ReportDTO reportDto = ydCallDetailClientService.getReportInfo(name, phoneNum, idCard, contact1, contactNum1, contact2, contactNum2);
-        resultDto.setStatus(EnumResultStatus.SUCCESS);
-        if (reportDto!=null) {
-        	resultDto.setMsg(EnumResultStatus.SUCCESS.getName());
-		}else {
-			resultDto.setMsg("无数据信息！");
-		}
-        resultDto.setData(reportDto);
-        return responseStr(JSON.toJSONString(resultDto));
-    }
 }

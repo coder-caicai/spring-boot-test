@@ -285,4 +285,7 @@
 	group by phone
 	order by talkDays desc
 	</select>
+	<select id="findNewData"  parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select * from lt_call_detail where id>#{id,jdbcType=TINYINT}
+	</select>
 </mapper>

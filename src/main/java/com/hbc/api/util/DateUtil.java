@@ -113,8 +113,7 @@ public class DateUtil {
     }
 
 //    public static void main(String[] args) {
-////        System.out.print(getEndDayInMonth("201607"));
-//        int i = timeToSecond("00:00:04");
-//        System.out.print(i);
+//        System.out.print(getPreSixMonth());
+////        System.out.print(i);
 //    }
 }

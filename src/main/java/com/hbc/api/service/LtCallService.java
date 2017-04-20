@@ -85,7 +85,7 @@ public class LtCallService {
         return sendMsg(mobile);
     }
 
-
+    @Async
     public ResultDto synchroData (String mobile){
         ResultDto dto = new ResultDto();
         String pwd =(String) redisUtil.get(mobile+"_pwd");
@@ -230,9 +230,6 @@ public class LtCallService {
     }
 
 
-
-
-
     private ResultDto preSpider(String mobile, String pwd,String path) throws IOException {
         ResultDto dto = new ResultDto();
         Connection con = null;
@@ -343,7 +340,7 @@ public class LtCallService {
         }
     }
 
-
+    @Async
     public ResultDto sendMsg(String mobile) throws IOException {
         ResultDto dto = new ResultDto();
         Connection con = null;
@@ -373,7 +370,6 @@ public class LtCallService {
     }
 
 
-
     public ResultDto msgConfirm(String mobile,String msgCode) throws IOException {
         ResultDto dto = new ResultDto();
         Connection con = null;
@@ -397,7 +393,10 @@ public class LtCallService {
         if(StringUtils.isNotBlank(body)){
             JSONObject jsonObject = JSON.parseObject(body);
             if(jsonObject.getString("flag").equals("00")){
-                return synchroData(mobile);
+                synchroData(mobile);
+                dto.setStatus(EnumResultStatus.SUCCESS);
+                dto.setMsg(EnumResultStatus.SUCCESS.getName());
+                return dto;
             }else{
                 dto.setStatus(EnumResultStatus.ERROR);
                 dto.setMsg("短信验证码验证失败,请重新获取!");

@@ -1,0 +1,13 @@
+1:客户对接参数加密解密:aes密钥文件 com.hbc.api.util.EncryptUtils
+2:移动加密解密文件 com.hbc.api.service.YdCallClientService
+  密钥: _Leadeon/SecurityOrganization
+  加密方式:MD5
+3:电信加密密钥文件: com.hbc.api.service.DxCallClientService
+  密钥: 1234567`90koiuyhgtfrdewsaqaqsqde
+  加密方式:aes
+4:联通:没有加密,明文传输
+5:配置文件:
+    application.yml      主配置环境
+    application-loc.yml  本地环境
+    application-dev.yml  开发,测试环境
+    application-prod.yml 线上环境

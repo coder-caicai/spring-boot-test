@@ -1,0 +1,67 @@
+#测试开发环境
+profile: dev_envrimont
+spring:
+    freemarker.prefer-file-system-access: false
+    datasource:
+        url: jdbc:mysql://testmysql:3306/spider?useUnicode=true&characterEncoding=utf8
+        username: liuxin
+        password: liuxin
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        filters: stat
+        maxActive: 20
+        initialSize: 1
+        maxWait: 60000
+        minIdle: 1
+        timeBetweenEvictionRunsMillis: 60000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: select 'x'
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        poolPreparedStatements: true
+        maxOpenPreparedStatements: 20
+    mvc:
+        view:
+            prefix: /templates/
+            suffix: .ftl
+    freemarker:
+        cache: false
+        request-context-attribute: request
+        content-type: text/html
+    messages:
+        encoding: utf-8
+    http:
+        encoding:
+            charset: UTF-8
+            enabled: true
+    redis:
+          host: testredis
+          password:
+          port: 6379
+          pool:
+            max-idle: 8
+            min-idle: 0
+            max-active: 300
+            max-wait: 10000
+          timeout: 100000
+    mail:
+        host: smtp.exmail.qq.com
+        username: caichengzhang@hbc315.com
+        password: 3qptN6ZiJySjSVGL
+        properties:
+          mail:
+            smtp:
+              auth: true
+              starttls:
+                enable: false
+                required: false
+
+custom:
+  #代理模式 0:不用代理， 1:使用收费代理， 2:使用免费代理
+  proxyModel: 0
+  #线程数，不要超过5
+  threadNumber: 5
+  #数据库id存储文件
+  DB_ID_PATH: /home/hbc/DB_ID.txt
+

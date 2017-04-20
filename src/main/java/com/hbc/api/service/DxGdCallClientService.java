@@ -42,7 +42,6 @@ import java.util.*;
 @Service
 public class DxGdCallClientService {
 
-
     @Autowired
     private DxCallClientMapper dxCallClientMapper;
 
@@ -92,10 +91,12 @@ public class DxGdCallClientService {
      */
     public String login(String mobile, String pwd,String path,Integer clientId) {
         redisUtil.remove(mobile);
-
-        saveTimeLength(mobile);
-
-        String domain = "http://61.140.99.28:8080/MOService/api?v=2.1&name=jbAClientSp&category=android&imsi=" + mobile + "&paramStr=";
+        try {
+            saveTimeLength(mobile);
+        }catch (Exception e){
+            logger.error("调用验证在网时长失败!手机号:"+mobile);
+        }
+//        String domain = "http://61.140.99.28:8080/MOService/api?v=2.1&name=jbAClientSp&category=android&imsi=" + mobile + "&paramStr=";
         try{
             Map<String, String> cookieMap = new HashMap<>();
             Connection con = null;
@@ -137,8 +138,6 @@ public class DxGdCallClientService {
 //                }
 //                os.close();
 //                is.close();
-
-
 
 
                 Map<String,String> map = new HashMap<>();

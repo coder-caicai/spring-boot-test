@@ -22,24 +22,26 @@ public interface LtCallDetailMapper extends MyMapper<LtCallDetail> {
     public List<LtCallDetail> getListByCallId(List<Integer> callIds);
 
     public List<LtCallDetail> getTop10ByCallId(List<Integer> callIds);
-    
+
     public List<CallTimesDateDTO> getCallTimesTop10ByCallId(List<Integer> callIds);
-    
+
     public List<CallDurationDateDTO> getCallDurationTop10ByCallId(List<Integer> callIds);
-    
+
     public Integer getNightCallTimesByCallId(List<Integer> callIds);
-    
+
     public Integer getNightCallDurationByCallId(List<Integer> callIds);
-    
+
     public Integer getRoamingDaysByCallId(List<Integer> callIds);
-    
+
     public Integer getSleepingDaysByCallId(List<Integer> callIds);
-    
+
     public ContactsInfoDTO getContactsInfoByCallIdAndPhone(Map<String,Object> map) ;
-    
+
     public NightInfoDTO getNightInfoByCallId(List<Integer> callIds);
-    
+
     public CallTimesAndDurationDTO getCallTimesAndDurationByCallIdAndType(Map<String,Object> map);
-    
+
     public List<BestFriendDTO> getAllContactsInfoByCallId(List<Integer> callIds);
+
+    List<LtCallDetail> findNewData(Integer id);
 }
