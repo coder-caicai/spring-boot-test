@@ -40,16 +40,13 @@ public class YdClientServiceTest {
 
     @Test
     public void test() throws Exception {
-//        ResultDto result = ydCallClientService.login("13716471599","200858",10000);
-//        EnumResultStatus result2 = ydCallClientService.login("15945941941","538815",10000);
-        ResultDto result = ydCallClientService.sendMsg("18321075426");
+        ResultDto result = ydCallClientService.sendMsg("");
         logger.info(JSON.toJSONString(result));
-//        logger.info(JSON.toJSONString(result2));
     }
 
     @Test
     public void testSpider() throws Exception {
-       ResultDto result =  ydCallClientService.synchroData("18321075426","846766","123123",10000000);
+       ResultDto result =  ydCallClientService.synchroData("","","123123",10000000);
         logger.info(JSON.toJSONString(result));
     }
 
